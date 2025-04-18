@@ -1,5 +1,7 @@
 # Action Figure Generator
 
+[Live Demo](https://ai-action-figure.me/)
+
 Generate your own custom action figure using AI! Upload a photo of yourself and customize your action figure's details to create a viral-style action figure image.
 
 ## Features
@@ -30,28 +32,32 @@ Generate your own custom action figure using AI! Upload a photo of yourself and 
 ### Setup
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/antonengelhardt/ai-action-figure.git
 cd ai-action-figure
 ```
 
-2. Install dependencies:
+1. Install dependencies:
+
 ```bash
 pnpm install
 ```
 
-3. Create a `.env.local` file in the root directory with your API key:
-```
+1. Create a `.env.local` file in the root directory with your API key:
+
+```bash
 # OpenAI API Key
 OPENAI_API_KEY=your_openai_api_key_here
 ```
 
-4. Start the development server:
+1. Start the development server:
+
 ```bash
 pnpm dev
 ```
 
-5. Open your browser and navigate to [http://localhost:3000](http://localhost:3000)
+1. Open your browser and navigate to [http://localhost:3000](http://localhost:3000)
 
 ## Deploying
 
