@@ -42,17 +42,11 @@ jobs:
 
   deploy:
     needs: ghcr-image
+    environment: demo
     runs-on: ubuntu-latest
-    environment: prod
     steps:
-      - name: Install Doctl
-        uses: digitalocean/action-doctl@v2
+      - uses: actions-hub/kubectl@master
+        env:
+          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
         with:
-          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
-
-      - name: Save DigitalOcean kubeconfig with short-lived credentials
-        run: doctl kubernetes cluster kubeconfig save --expiry-seconds 600 ss-k8s-02
-
-      - name: Deploy to Kubernetes
-        run: kubectl rollout restart deployment ai-action-figure -n ai-action-figure
-
+          args: rollout restart deployment ai-action-figure -n ai-action-figure
