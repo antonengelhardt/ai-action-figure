@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, KeyboardEvent } from "react";
+import { useState, KeyboardEvent, useEffect } from "react";
 import Image from "next/image";
 import ImageUpload from "./ImageUpload";
 
@@ -31,10 +31,19 @@ export default function ActionFigureForm({
     imageUrl: "",
   });
   const [gadgetInput, setGadgetInput] = useState("");
+  const [isFormVisible, setIsFormVisible] = useState(false);
+  const [currentStep, setCurrentStep] = useState<"upload" | "details">("upload");
+  const [lastAddedGadget, setLastAddedGadget] = useState<string | null>(null);
 
-  const [currentStep, setCurrentStep] = useState<"upload" | "details">(
-    "upload"
-  );
+  // Animation effect when step changes
+  useEffect(() => {
+    // Short delay to trigger the entrance animation
+    const timer = setTimeout(() => {
+      setIsFormVisible(true);
+    }, 50);
+
+    return () => clearTimeout(timer);
+  }, [currentStep]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -45,17 +54,30 @@ export default function ActionFigureForm({
 
   const handleImageUploaded = (imageUrl: string) => {
     setFormData((prev) => ({ ...prev, imageUrl }));
-    setCurrentStep("details");
+    setIsFormVisible(false);
+    setTimeout(() => {
+      setCurrentStep("details");
+      // Reset form visibility for animation
+      setIsFormVisible(false);
+      setTimeout(() => setIsFormVisible(true), 50);
+    }, 300);
   };
 
   const handleAddGadget = () => {
     if (gadgetInput.trim() === "" || formData.gadgets.length >= 3) return;
+
+    setLastAddedGadget(gadgetInput.trim());
 
     setFormData((prev) => ({
       ...prev,
       gadgets: [...prev.gadgets, gadgetInput.trim()],
     }));
     setGadgetInput("");
+
+    // Clear the lastAddedGadget after animation completes
+    setTimeout(() => {
+      setLastAddedGadget(null);
+    }, 1000);
   };
 
   const handleGadgetKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
@@ -66,15 +88,39 @@ export default function ActionFigureForm({
   };
 
   const handleRemoveGadget = (gadget: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      gadgets: prev.gadgets.filter((g) => g !== gadget),
-    }));
+    // Find the element and add a removal animation class
+    const gadgetElement = document.getElementById(`gadget-${gadget}`);
+    if (gadgetElement) {
+      gadgetElement.classList.add("animate-fade-out-scale");
+
+      // Wait for animation to complete before removing from state
+      setTimeout(() => {
+        setFormData((prev) => ({
+          ...prev,
+          gadgets: prev.gadgets.filter((g) => g !== gadget),
+        }));
+      }, 300);
+    } else {
+      // If element not found, just remove it immediately
+      setFormData((prev) => ({
+        ...prev,
+        gadgets: prev.gadgets.filter((g) => g !== gadget),
+      }));
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onGenerate(formData);
+  };
+
+  const handleBackToUpload = () => {
+    setIsFormVisible(false);
+    setTimeout(() => {
+      setCurrentStep("upload");
+      // Reset form visibility for animation
+      setTimeout(() => setIsFormVisible(true), 50);
+    }, 300);
   };
 
   const isValid =
@@ -86,7 +132,7 @@ export default function ActionFigureForm({
 
   if (currentStep === "upload") {
     return (
-      <div className="max-w-md mx-auto p-8 bg-gradient-to-b from-slate-50 to-white dark:from-slate-800 dark:to-slate-900 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-slate-100 dark:border-slate-700">
+      <div className={`max-w-md mx-auto p-8 bg-gradient-to-b from-slate-50 to-white dark:from-slate-800 dark:to-slate-900 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-slate-100 dark:border-slate-700 transition-all duration-500 ease-in-out ${isFormVisible ? "opacity-100 scale-100" : "opacity-0 scale-95"}`}>
         <h2 className="text-2xl font-bold text-center mb-6 bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-blue-500">
           Upload Your Photo
         </h2>
@@ -115,24 +161,24 @@ export default function ActionFigureForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="max-w-md mx-auto p-8 bg-gradient-to-b from-slate-50 to-white dark:from-slate-800 dark:to-slate-900 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-slate-100 dark:border-slate-700"
+      className={`max-w-md mx-auto p-8 bg-gradient-to-b from-slate-50 to-white dark:from-slate-800 dark:to-slate-900 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-slate-100 dark:border-slate-700 transition-all duration-500 ease-in-out ${isFormVisible ? "opacity-100 scale-100" : "opacity-0 scale-95"}`}
     >
       <h2 className="text-2xl font-bold text-center mb-8 bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-blue-500">
         Customize Your Action Figure
       </h2>
 
       <div className="mb-8">
-        <div className="relative w-40 h-40 mx-auto mb-4">
+        <div className="relative w-40 h-40 mx-auto mb-4 rounded-xl overflow-hidden group">
           <Image
             src={formData.imageUrl}
             alt="Your uploaded photo"
             fill
-            className="object-cover rounded-xl shadow-md border-2 border-white dark:border-slate-600"
+            className="object-cover rounded-xl shadow-md border-2 border-white dark:border-slate-600 transition-transform duration-700 ease-in-out group-hover:scale-110"
           />
           <button
             type="button"
-            onClick={() => setCurrentStep("upload")}
-            className="absolute -bottom-3 -right-3 bg-white dark:bg-slate-700 rounded-full p-2 shadow-lg hover:bg-gray-50 dark:hover:bg-slate-600 transition-all duration-200 border border-gray-100 dark:border-slate-600 text-blue-500 dark:text-blue-300"
+            onClick={handleBackToUpload}
+            className="absolute -bottom-3 -right-3 bg-white dark:bg-slate-700 rounded-full p-2 shadow-lg hover:bg-gray-50 dark:hover:bg-slate-600 transition-all duration-200 border border-gray-100 dark:border-slate-600 text-blue-500 dark:text-blue-300 hover:scale-110 active:scale-95"
           >
             <svg
               className="h-5 w-5"
@@ -149,11 +195,12 @@ export default function ActionFigureForm({
               />
             </svg>
           </button>
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
         </div>
       </div>
 
       <div className="space-y-5">
-        <div>
+        <div className="animate-fade-in" style={{ animationDelay: "100ms" }}>
           <label
             htmlFor="figureName"
             className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
@@ -167,12 +214,12 @@ export default function ActionFigureForm({
             value={formData.figureName}
             onChange={handleInputChange}
             placeholder="e.g. The Code Master"
-            className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent placeholder-gray-400 dark:placeholder-gray-500 transition-all duration-200"
+            className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent placeholder-gray-400 dark:placeholder-gray-500 transition-all duration-300 hover:shadow-md focus:shadow-lg"
             required
           />
         </div>
 
-        <div>
+        <div className="animate-fade-in" style={{ animationDelay: "200ms" }}>
           <label
             htmlFor="outfit"
             className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
@@ -186,12 +233,12 @@ export default function ActionFigureForm({
             value={formData.outfit}
             onChange={handleInputChange}
             placeholder="e.g. a sleek black suit with silver accents"
-            className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent placeholder-gray-400 dark:placeholder-gray-500 transition-all duration-200"
+            className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent placeholder-gray-400 dark:placeholder-gray-500 transition-all duration-300 hover:shadow-md focus:shadow-lg"
             required
           />
         </div>
 
-        <div>
+        <div className="animate-fade-in" style={{ animationDelay: "300ms" }}>
           <label
             htmlFor="facialExpression"
             className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
@@ -205,12 +252,12 @@ export default function ActionFigureForm({
             value={formData.facialExpression}
             onChange={handleInputChange}
             placeholder="e.g. determined, smiling, serious"
-            className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent placeholder-gray-400 dark:placeholder-gray-500 transition-all duration-200"
+            className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent placeholder-gray-400 dark:placeholder-gray-500 transition-all duration-300 hover:shadow-md focus:shadow-lg"
             required
           />
         </div>
 
-        <div>
+        <div className="animate-fade-in" style={{ animationDelay: "400ms" }}>
           <label
             htmlFor="colorScheme"
             className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
@@ -224,12 +271,12 @@ export default function ActionFigureForm({
             value={formData.colorScheme}
             onChange={handleInputChange}
             placeholder="e.g. blue and gold gradient"
-            className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent placeholder-gray-400 dark:placeholder-gray-500 transition-all duration-200"
+            className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent placeholder-gray-400 dark:placeholder-gray-500 transition-all duration-300 hover:shadow-md focus:shadow-lg"
             required
           />
         </div>
 
-        <div>
+        <div className="animate-fade-in" style={{ animationDelay: "500ms" }}>
           <label
             htmlFor="gadgets"
             className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
@@ -244,20 +291,18 @@ export default function ActionFigureForm({
               onChange={(e) => setGadgetInput(e.target.value)}
               onKeyDown={handleGadgetKeyDown}
               placeholder="e.g. laser watch"
-              className="flex-1 px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent placeholder-gray-400 dark:placeholder-gray-500 transition-all duration-200"
+              className="flex-1 px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent placeholder-gray-400 dark:placeholder-gray-500 transition-all duration-300 hover:shadow-md focus:shadow-lg"
               disabled={formData.gadgets.length >= 3}
             />
             <button
               type="button"
               onClick={handleAddGadget}
-              className={`px-4 py-3 rounded-lg shadow-sm ${
+              className={`px-4 py-3 rounded-lg shadow-sm transition-all duration-300 transform active:scale-95 ${
                 gadgetInput.trim() === "" || formData.gadgets.length >= 3
                   ? "bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed"
-                  : "bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700 transition-all duration-200"
+                  : "bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700 hover:shadow-md"
               }`}
-              disabled={
-                gadgetInput.trim() === "" || formData.gadgets.length >= 3
-              }
+              disabled={gadgetInput.trim() === "" || formData.gadgets.length >= 3}
             >
               Add
             </button>
@@ -267,14 +312,15 @@ export default function ActionFigureForm({
             <div className="flex flex-wrap gap-2 mt-3">
               {formData.gadgets.map((gadget) => (
                 <div
+                  id={`gadget-${gadget}`}
                   key={gadget}
-                  className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 text-blue-700 dark:text-blue-300 px-3 py-1.5 rounded-full text-sm flex items-center border border-blue-100 dark:border-blue-800"
+                  className={`bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 text-blue-700 dark:text-blue-300 px-3 py-1.5 rounded-full text-sm flex items-center border border-blue-100 dark:border-blue-800 transition-all duration-300 ${lastAddedGadget === gadget ? 'animate-bounce-in' : ''}`}
                 >
                   {gadget}
                   <button
                     type="button"
                     onClick={() => handleRemoveGadget(gadget)}
-                    className="ml-2 h-5 w-5 rounded-full bg-white dark:bg-slate-700 text-blue-500 dark:text-blue-300 flex items-center justify-center hover:bg-blue-100 dark:hover:bg-slate-600 transition-all duration-200"
+                    className="ml-2 h-5 w-5 rounded-full bg-white dark:bg-slate-700 text-blue-500 dark:text-blue-300 flex items-center justify-center hover:bg-blue-100 dark:hover:bg-slate-600 transition-all duration-200 hover:scale-110 active:scale-95"
                   >
                     <svg
                       className="h-3 w-3"
@@ -307,9 +353,9 @@ export default function ActionFigureForm({
       <button
         type="submit"
         disabled={!isValid || isGenerating}
-        className={`w-full mt-8 py-3 px-4 rounded-xl shadow-md ${
+        className={`w-full mt-8 py-3 px-4 rounded-xl shadow-md transform transition-all duration-300 ${
           isValid && !isGenerating
-            ? "bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white transition-all duration-200"
+            ? "bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white hover:shadow-lg hover:-translate-y-1 active:translate-y-0"
             : "bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed"
         } font-medium text-lg`}
       >
@@ -343,10 +389,12 @@ export default function ActionFigureForm({
       </button>
 
       {isGenerating && (
-        <p className="text-xs text-gray-600 dark:text-gray-300 mt-4 text-center bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-          AI is analyzing your photo and creating a custom action figure. This
-          may take up to a minute.
-        </p>
+        <div className="mt-4 text-center bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg animate-pulse">
+          <p className="text-xs text-gray-600 dark:text-gray-300">
+            AI is analyzing your photo and creating a custom action figure. This
+            may take up to a minute.
+          </p>
+        </div>
       )}
     </form>
   );
