@@ -1,0 +1,13 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: ai-action-figure-certificate
+  namespace: ai-action-figure
+spec:
+  secretName: ai-action-figure-tls
+  issuerRef:
+    name: letsencrypt-production
+    kind: ClusterIssuer
+  commonName: 'ai-action-figure.me'
+  dnsNames:
+    - 'ai-action-figure.me'

@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ai-action-figure-service
+  namespace: ai-action-figure
+spec:
+  selector:
+    app: ai-action-figure
+  type: ClusterIP
+
+  ports:
+    - name: http
+      port: 3000
+      targetPort: 3000
+      protocol: TCP

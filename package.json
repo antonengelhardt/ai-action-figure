@@ -1,7 +1,12 @@
 {
-  "name": "action-figure-generator",
+  "name": "ai-action-figure",
   "version": "0.1.0",
   "private": true,
+  "description": "Create your own custom action figure with AI. Upload a photo and customize your action figure.",
+  "author": {
+    "name": "Anton Engelhardt",
+    "url": "https://buymeacoffee.com/antonengelhardt"
+  },
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
@@ -9,19 +14,37 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "ai": "^4.3.9",
+    "next": "15.3.1",
+    "openai": "^4.95.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "next": "15.3.1"
+    "react-dropzone": "^14.3.8"
   },
   "devDependencies": {
-    "typescript": "^5",
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@tailwindcss/postcss": "^4",
-    "tailwindcss": "^4",
     "eslint": "^9",
     "eslint-config-next": "15.3.1",
-    "@eslint/eslintrc": "^3"
-  }
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  },
+  "keywords": [
+    "action figure",
+    "ai",
+    "openai",
+    "dall-e",
+    "image generation",
+    "next.js",
+    "toy",
+    "collectible"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/antonengelhardt/ai-action-figure"
+  },
+  "license": "MIT"
 }

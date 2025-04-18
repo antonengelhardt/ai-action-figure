@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-action-figure
+  namespace: ai-action-figure
+
+spec:
+  selector:
+    matchLabels:
+      app: ai-action-figure
+
+  minReadySeconds: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+
+  template:
+    metadata:
+      labels:
+        app: ai-action-figure
+
+    spec:
+      # Spread the pods across the nodes
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: 'kubernetes.io/hostname'
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app: ai-action-figure
+
+      # Pull the image from Docker Hub with the secret
+      imagePullSecrets:
+        - name: ghcr
+
+      containers:
+        - name: ai-action-figure
+          image: ghcr.io/antonengelhardt/ai-action-figure:latest
+          imagePullPolicy: Always
+
+          # Set the resource limits
+          resources:
+            requests:
+              memory: '200Mi'
+              cpu: '250m'
+            limits:
+              memory: '400Mi'
+              cpu: '500m'
+
+          # Check if the container was started
+          startupProbe:
+            httpGet:
+              path: /healthcheck
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 5
+
+          # Check if the container is ready and able to receive traffic
+          readinessProbe:
+            httpGet:
+              path: /healthcheck
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 5
+
+          # Check if the container is ready and restart it if it's not
+          livenessProbe:
+            httpGet:
+              path: /healthcheck
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 5
+
+          # Expose the port 3000
+          ports:
+            - containerPort: 3000
